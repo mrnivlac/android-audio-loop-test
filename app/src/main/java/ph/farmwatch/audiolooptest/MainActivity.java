@@ -127,7 +127,7 @@ public class MainActivity extends AppCompatActivity {
                 textView_status.setText("Playing");
 
                 play_count++;
-                if(play_count > 3) {
+                if(!canPlay()) {
                     Toast.makeText(MainActivity.this, "Exceeded Max Play Count", Toast.LENGTH_SHORT).show();
                     userLog("exceeded play count");
                     return;
@@ -141,7 +141,7 @@ public class MainActivity extends AppCompatActivity {
                     public void onCompletion(MediaPlayer mediaPlayer) {
                         cleanUpMediaPlayer();
 
-                        if(sequence_count < 1) {
+                        if(canSequence()) {
                             button_sequence.setEnabled(true);
                         }
                         button_play.setEnabled(true);
@@ -157,6 +157,8 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 button_sequence.setEnabled(false);
+                button_play.setEnabled(false);
+
                 sequence_count++;
 
                 StringBuilder control = new StringBuilder(10);
@@ -220,6 +222,14 @@ public class MainActivity extends AppCompatActivity {
         userLog("app exit");
 
         super.onStop();
+    }
+
+    private boolean canPlay() {
+        return (play_count < 3) && (sequence_count < 1);
+    }
+
+    private boolean canSequence() {
+        return (sequence_count < 1);
     }
 
     private void userLog(String string) {
