@@ -10,15 +10,21 @@ import android.media.MediaPlayer;
 import android.media.MediaRecorder;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
@@ -28,6 +34,8 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends AppCompatActivity {
+    private final static String TAG = MainActivity.class.getSimpleName();
+
     Button button_record, button_play, button_sequence, button_reset;
     TextView textView_status;
     EditText editText_answer;
@@ -56,9 +64,9 @@ public class MainActivity extends AppCompatActivity {
     State state = State.READY;
 
     // Requesting permission to RECORD_AUDIO
-    private boolean permissionToRecordAccepted = false;
-    private String [] permissions = {Manifest.permission.RECORD_AUDIO};
-    private static final int REQUEST_RECORD_AUDIO_PERMISSION = 200;
+    private boolean permissionAccepted = false;
+    private String [] permissions = {Manifest.permission.RECORD_AUDIO, Manifest.permission.WRITE_EXTERNAL_STORAGE};
+    private static final int REQUEST_PERMISSION = 200;
     private MediaRecorder recorder;
     String fileName;
 
@@ -72,11 +80,11 @@ public class MainActivity extends AppCompatActivity {
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         switch (requestCode){
-            case REQUEST_RECORD_AUDIO_PERMISSION:
-                permissionToRecordAccepted  = grantResults[0] == PackageManager.PERMISSION_GRANTED;
+            case REQUEST_PERMISSION:
+                permissionAccepted = grantResults[0] == PackageManager.PERMISSION_GRANTED;
                 break;
         }
-        if (!permissionToRecordAccepted ) finish();
+        if (!permissionAccepted) finish();
 
     }
 
@@ -85,7 +93,9 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        ActivityCompat.requestPermissions(this, permissions, REQUEST_RECORD_AUDIO_PERMISSION);
+        userLog("app launch");
+
+        ActivityCompat.requestPermissions(this, permissions, REQUEST_PERMISSION);
 
         sequence = new ArrayList<>(SEQUENCE_SIZE);
         fileName = getCacheDir().getAbsolutePath() + "/test.3gp";
@@ -100,6 +110,8 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View view) {
                 button_record.setEnabled(false);
 
+                userLog("record");
+
                 state = State.RECORD;
                 countdown = 6;
 
@@ -111,14 +123,17 @@ public class MainActivity extends AppCompatActivity {
         button_play.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                button_play.setEnabled(false);
+                textView_status.setText("Playing");
+
                 play_count++;
                 if(play_count > 3) {
                     Toast.makeText(MainActivity.this, "Exceeded Max Play Count", Toast.LENGTH_SHORT).show();
+                    userLog("exceeded play count");
                     return;
                 }
 
-                button_play.setEnabled(false);
-                textView_status.setText("Playing");
+                userLog("play " + play_count);
 
                 mediaPlayer = MediaPlayer.create(MainActivity.this, Uri.fromFile(new File(fileName)));
                 mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
@@ -141,6 +156,9 @@ public class MainActivity extends AppCompatActivity {
         button_sequence.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                button_sequence.setEnabled(false);
+                sequence_count++;
+
                 StringBuilder control = new StringBuilder(10);
                 for(Integer i : sequence) {
                     control.append(i);
@@ -151,11 +169,11 @@ public class MainActivity extends AppCompatActivity {
 
                 if(answer.contentEquals(control)) {
                     textView_status.setText("PASSED");
+                    userLog("sequence passed");
                 } else {
                     textView_status.setText("FAILED");
+                    userLog("sequence failed");
                 }
-                button_sequence.setEnabled(false);
-                sequence_count++;
             }
         });
 
@@ -165,6 +183,8 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View view) {
                 play_count = 0;
                 sequence_count = 0;
+
+                userLog("reset");
 
                 if(mediaPlayer != null) {
                     if(mediaPlayer.isPlaying()) mediaPlayer.stop();
@@ -193,6 +213,39 @@ public class MainActivity extends AppCompatActivity {
                 editText_answer.setText("");
             }
         });
+    }
+
+    @Override
+    protected void onStop() {
+        userLog("app exit");
+
+        super.onStop();
+    }
+
+    private void userLog(String string) {
+        BufferedWriter out;
+        File Root = Environment.getExternalStorageDirectory();
+        try {
+            Log.d(TAG, "root log " + Root.canWrite());
+            if (Root.canWrite()) {
+                File LogFile = new File(Root, "audio-loop-test.log");
+                FileWriter LogWriter = new FileWriter(LogFile, true);
+                out = new BufferedWriter(LogWriter);
+
+                Calendar calendar = Calendar.getInstance();
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
+                StringBuilder sb = new StringBuilder();
+                sb.append(sdf.format(calendar.getTime()));
+                sb.append(": ");
+                sb.append(string);
+                sb.append("\r\n");
+
+                out.write(sb.toString());
+                out.close();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private void cleanUpMediaPlayer() {
