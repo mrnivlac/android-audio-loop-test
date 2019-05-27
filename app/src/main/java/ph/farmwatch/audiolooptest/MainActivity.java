@@ -14,6 +14,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.io.File;
 import java.io.IOException;
@@ -62,6 +63,8 @@ public class MainActivity extends AppCompatActivity {
     String fileName;
 
     int countdown;
+    int play_count = 0;
+    int sequence_count = 0;
 
     ScheduledExecutorService executor_rec_legnth, executor_countdown;
 
@@ -108,6 +111,12 @@ public class MainActivity extends AppCompatActivity {
         button_play.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                play_count++;
+                if(play_count > 3) {
+                    Toast.makeText(MainActivity.this, "Exceeded Max Play Count", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
                 button_play.setEnabled(false);
                 textView_status.setText("Playing");
 
@@ -117,7 +126,9 @@ public class MainActivity extends AppCompatActivity {
                     public void onCompletion(MediaPlayer mediaPlayer) {
                         cleanUpMediaPlayer();
 
-                        button_sequence.setEnabled(true);
+                        if(sequence_count < 1) {
+                            button_sequence.setEnabled(true);
+                        }
                         button_play.setEnabled(true);
                         textView_status.setText("Done");
                     }
@@ -143,6 +154,8 @@ public class MainActivity extends AppCompatActivity {
                 } else {
                     textView_status.setText("FAILED");
                 }
+                button_sequence.setEnabled(false);
+                sequence_count++;
             }
         });
 
@@ -150,6 +163,9 @@ public class MainActivity extends AppCompatActivity {
         button_reset.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                play_count = 0;
+                sequence_count = 0;
+
                 if(mediaPlayer != null) {
                     if(mediaPlayer.isPlaying()) mediaPlayer.stop();
                     mediaPlayer.release();
