@@ -75,4 +75,25 @@
         app:layout_constraintRight_toRightOf="parent"
         android:text="Reset"/>
 
+    <Button
+        android:id="@+id/button_open_logs"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Open Logfile"
+        style="?android:borderlessButtonStyle"
+        app:layout_constraintHorizontal_chainStyle="packed"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toLeftOf="@id/button_send_logs"
+        app:layout_constraintBottom_toBottomOf="parent"/>
+
+    <Button
+        android:id="@+id/button_send_logs"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Share Log &amp; Test Files"
+        style="?android:borderlessButtonStyle"
+        app:layout_constraintLeft_toRightOf="@id/button_open_logs"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintBottom_toBottomOf="@id/button_open_logs"/>
+
 </androidx.constraintlayout.widget.ConstraintLayout>

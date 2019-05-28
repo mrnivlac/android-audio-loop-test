@@ -1,22 +1,24 @@
 package ph.farmwatch.audiolooptest;
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-
 import android.Manifest;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.media.MediaPlayer;
 import android.media.MediaRecorder;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.app.ShareCompat;
+import androidx.core.content.FileProvider;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -35,8 +37,9 @@ import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends AppCompatActivity {
     private final static String TAG = MainActivity.class.getSimpleName();
+    public static final String LOG_FILENAME = "audio-loop-test.txt";
 
-    Button button_record, button_play, button_sequence, button_reset;
+    Button button_record, button_play, button_sequence, button_reset, button_open_logs, button_send_logs;
     TextView textView_status;
     EditText editText_answer;
 
@@ -98,7 +101,7 @@ public class MainActivity extends AppCompatActivity {
         ActivityCompat.requestPermissions(this, permissions, REQUEST_PERMISSION);
 
         sequence = new ArrayList<>(SEQUENCE_SIZE);
-        fileName = getCacheDir().getAbsolutePath() + "/test.3gp";
+        fileName = getFilesDir().getAbsolutePath() + "/test.3gp";
 
         textView_status = findViewById(R.id.textview_status);
 
@@ -215,6 +218,54 @@ public class MainActivity extends AppCompatActivity {
                 editText_answer.setText("");
             }
         });
+
+        button_open_logs = findViewById(R.id.button_open_logs);
+        button_open_logs.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                File file = new File(getLogfileDirectory(), LOG_FILENAME);
+                Uri contentUri = FileProvider.getUriForFile(MainActivity.this, "ph.farmwatch.audiolooptest.fileprovider", file);
+
+                Intent intent = new Intent(Intent.ACTION_VIEW);
+                intent.setDataAndType(contentUri, "text/plain");
+                intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+
+                startActivity(Intent.createChooser(intent, "Open Logfile with"));
+            }
+        });
+
+        button_send_logs = findViewById(R.id.button_send_logs);
+        button_send_logs.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Uri logUri = FileProvider.getUriForFile(MainActivity.this, "ph.farmwatch.audiolooptest.fileprovider", new File(getLogfileDirectory(), LOG_FILENAME));
+                Uri recordingUri = FileProvider.getUriForFile(MainActivity.this, "ph.farmwatch.audiolooptest.fileprovider", new File(getFilesDir(), "test.3gp" ));
+
+                Intent intent = ShareCompat.IntentBuilder.from(MainActivity.this)
+                        .setType("*/*")
+                        .addStream(logUri)
+                        .addStream(recordingUri)
+                        .setChooserTitle("Share Files")
+                        .createChooserIntent()
+                        .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+
+                //todo: this is a hardcoded fix for granting permission when sharing via bluetooth
+                getApplicationContext().grantUriPermission("com.android.bluetooth", logUri, Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
+                getApplicationContext().grantUriPermission("com.android.bluetooth", recordingUri, Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
+                //end of todo
+
+                /*
+                List<ResolveInfo> resInfoList = getPackageManager().queryIntentActivities(intent, PackageManager.MATCH_ALL);
+                for (ResolveInfo resolveInfo : resInfoList) {
+                    String packageName = resolveInfo.activityInfo.packageName;
+                    grantUriPermission(packageName, logUri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                    grantUriPermission(packageName, recordingUri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                }
+                */
+
+                startActivity(intent);
+            }
+        });
     }
 
     @Override
@@ -232,13 +283,18 @@ public class MainActivity extends AppCompatActivity {
         return (sequence_count < 1);
     }
 
+    private File getLogfileDirectory() {
+        return getFilesDir();
+        //return Environment.getExternalStorageDirectory();
+    }
+
     private void userLog(String string) {
         BufferedWriter out;
-        File Root = Environment.getExternalStorageDirectory();
+        File Root = getLogfileDirectory();
         try {
-            Log.d(TAG, "root log " + Root.canWrite());
+            Log.d(TAG, "user log can write " + Root.canWrite());
             if (Root.canWrite()) {
-                File LogFile = new File(Root, "audio-loop-test.log");
+                File LogFile = new File(Root, LOG_FILENAME);
                 FileWriter LogWriter = new FileWriter(LogFile, true);
                 out = new BufferedWriter(LogWriter);
 
