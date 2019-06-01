@@ -1,4 +1,6 @@
 # Android Audio Loop Test
+![screenshot](./Screenshot_20190601-205503_Audio%20Loop%20Test.jpg | width=100)
+
 This app is designed for the purpose of testing if a device is suitable to be used in telecon/telemedicine applications.
 It uses the speaker and mic of the device and relies on the user's hearing.
 
