@@ -1,8 +1,10 @@
 package ph.farmwatch.audiolooptest;
 
 import android.Manifest;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.media.MediaRecorder;
 import android.net.Uri;
@@ -115,6 +117,8 @@ public class MainActivity extends AppCompatActivity {
 
                 userLog("record");
 
+                setMaxVolume();
+
                 state = State.RECORD;
                 countdown = 6;
 
@@ -137,6 +141,8 @@ public class MainActivity extends AppCompatActivity {
                 }
 
                 userLog("play " + play_count);
+
+                setMaxVolume();
 
                 mediaPlayer = MediaPlayer.create(MainActivity.this, Uri.fromFile(new File(fileName)));
                 mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
@@ -286,6 +292,16 @@ public class MainActivity extends AppCompatActivity {
     private File getLogfileDirectory() {
         return getFilesDir();
         //return Environment.getExternalStorageDirectory();
+    }
+
+    private void setMaxVolume() {
+        AudioManager am =
+                (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+
+        am.setStreamVolume(
+                AudioManager.STREAM_MUSIC,
+                am.getStreamMaxVolume(AudioManager.STREAM_MUSIC),
+                0);
     }
 
     private void userLog(String string) {
