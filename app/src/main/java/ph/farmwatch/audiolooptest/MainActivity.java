@@ -58,6 +58,8 @@ public class MainActivity extends AppCompatActivity {
             R.raw.nine
     };
 
+    final int[] BLACKLIST = {4, 6, 8};
+
     MediaPlayer mediaPlayer;
     List<Integer> sequence;
     Iterator<Integer> seq_iterator;
@@ -384,8 +386,22 @@ public class MainActivity extends AppCompatActivity {
     private void generateSequence() {
         sequence.clear();
         for(int i = 0; i < SEQUENCE_SIZE; i++) {
-            sequence.add(new Random().nextInt(10));
+            int r;
+            boolean valid = true;
+            do {
+                valid = true;
+                r = new Random().nextInt(10);
+                for (int k : BLACKLIST) {
+                    if (r == k - 1) {
+                        valid = false;
+                        break;
+                    }
+                }
+            } while (!valid);
+
+            sequence.add(r);
         }
+        Log.i(TAG, sequence.toString());
         seq_iterator = sequence.iterator();
     }
 

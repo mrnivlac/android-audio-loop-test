@@ -6,10 +6,10 @@ android {
             Properties properties = new Properties()
             properties.load(project.rootProject.file('local.properties').newDataInputStream())
 
-            storeFile file(properties.getProperty('storeFile'))
-            keyAlias properties.getProperty('keyAlias')
-            storePassword properties.getProperty('storePassword')
-            keyPassword properties.getProperty('keyPassword')
+            //storeFile file(properties.getProperty('storeFile'))
+            //keyAlias properties.getProperty('keyAlias')
+            //storePassword properties.getProperty('storePassword')
+            //keyPassword properties.getProperty('keyPassword')
         }
     }
     compileSdkVersion 28
@@ -18,7 +18,7 @@ android {
         minSdkVersion 15
         targetSdkVersion 28
         versionCode 2
-        versionName "1.4"
+        versionName "1.6"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
