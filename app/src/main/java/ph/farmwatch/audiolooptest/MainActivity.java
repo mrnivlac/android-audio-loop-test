@@ -58,7 +58,7 @@ public class MainActivity extends AppCompatActivity {
             R.raw.nine
     };
 
-    final int[] BLACKLIST = {4, 6, 8};
+    final int[] BLACKLIST = {2, 4, 6, 8};
 
     MediaPlayer mediaPlayer;
     List<Integer> sequence;
