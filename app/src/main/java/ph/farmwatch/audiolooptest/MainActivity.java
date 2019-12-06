@@ -392,7 +392,7 @@ public class MainActivity extends AppCompatActivity {
                 valid = true;
                 r = new Random().nextInt(10);
                 for (int k : BLACKLIST) {
-                    if (r == k - 1) {
+                    if (r == k) {
                         valid = false;
                         break;
                     }
